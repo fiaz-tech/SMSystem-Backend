@@ -4,10 +4,13 @@ import {
     ROLE_CODE,
     generateUsername,
     getSchoolInitials,
-    hashDefaultPassword
+    hashDefaultPassword,
+    generateDefaultUsersByRole,
+    generateUsersByRole,
+
 } from './users.utils.js';
 import { BadRequestError, NotFoundError } from '../../utils/errors.js';
-import { generateUsersByRole } from './users.utils.js';
+
 
 
 //CREATE SCHOOL ADMIN 
@@ -35,23 +38,23 @@ export const applyFreeTier = async (
     schoolName: string,
     conn: PoolConnection
 ) => {
-    await generateUsersByRole(schoolId, schoolName, 'student', 20, conn);
-    await generateUsersByRole(schoolId, schoolName, 'teacher', 5, conn);
-    await generateUsersByRole(schoolId, schoolName, 'parent', 20, conn);
+    await generateDefaultUsersByRole(schoolId, schoolName, 'student', 20, conn);
+    await generateDefaultUsersByRole(schoolId, schoolName, 'teacher', 5, conn);
+    await generateDefaultUsersByRole(schoolId, schoolName, 'parent', 20, conn);
 };
 
 
 //Exapnd Users 
 export const expandUsersAfterPaymentService = async (
     schoolId: number,
-    schoolName: string,
+    /*schoolName: string,*/
     limits: {
         student: number;
         teacher: number;
         parent: number;
     }
 ) => {
-    if (!schoolId || !schoolName) {
+    if (!schoolId) {
         throw new BadRequestError('Invalid school data');
     }
 
@@ -68,7 +71,6 @@ export const expandUsersAfterPaymentService = async (
 
     await generateUsersByRole(
         schoolId,
-        schoolName,
         'student',
         limits.student,
         conn
@@ -76,7 +78,6 @@ export const expandUsersAfterPaymentService = async (
 
     await generateUsersByRole(
         schoolId,
-        schoolName,
         'teacher',
         limits.teacher,
         conn
@@ -84,7 +85,6 @@ export const expandUsersAfterPaymentService = async (
 
     await generateUsersByRole(
         schoolId,
-        schoolName,
         'parent',
         limits.parent,
         conn

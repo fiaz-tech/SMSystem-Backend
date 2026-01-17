@@ -50,7 +50,6 @@ export const createSchoolWithDefaults = async (data: any) => {
     // Apply free tier
     await applyFreeTier(schoolId, data.name, connection);
 
-
     await connection.commit();
     connection.release();
 

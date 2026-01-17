@@ -5,5 +5,5 @@ import {
 
 export const userRoutes = async (fastify: FastifyInstance) => {
 
-    fastify.post('/users/upgrade', expandUsersAfterPayment);
+    fastify.post('/api/users/upgrade', expandUsersAfterPayment);
 };
