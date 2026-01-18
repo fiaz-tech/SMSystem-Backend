@@ -6,6 +6,7 @@ import { signToken, verifyToken } from './config/jwt.config.js';
 import { errorHandler } from './plugins/error-handler.js';
 import { schoolRoutes } from './modules/schools/schools.router.js';
 import { userRoutes } from './modules/users/users.router.js';
+import { subscriptionRoutes } from './modules/subscriptions/subs.router.js';
 import { AppError } from './utils/errors.js';
 
 
@@ -46,6 +47,7 @@ app.setErrorHandler((error, request, reply) => {
 
 app.register(schoolRoutes);
 app.register(userRoutes);
+app.register(subscriptionRoutes);
 
 dotenv.config();
 await errorHandler(app);

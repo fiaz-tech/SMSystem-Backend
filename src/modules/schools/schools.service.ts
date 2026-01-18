@@ -4,6 +4,7 @@ import { slugify } from "../../utils/slugify.js";
 import { BadRequestError, NotFoundError } from "../../utils/errors.js";
 import type { School } from "./schools.types.js";
 import { createSchoolAdminUser, applyFreeTier } from "../users/users.service.js";
+import { createFreeTierSchoolSubscription } from "../subscriptions/subs.service.js";
 
 
 interface CountRow extends RowDataPacket {
@@ -49,6 +50,9 @@ export const createSchoolWithDefaults = async (data: any) => {
 
     // Apply free tier
     await applyFreeTier(schoolId, data.name, connection);
+
+    //Let Data Reflect in school_subscriptions TABLE
+    await createFreeTierSchoolSubscription(schoolId, connection);
 
     await connection.commit();
     connection.release();

@@ -72,13 +72,14 @@ export const generateDefaultUsersByRole = async (
 //GENERATE USERS BY ROLE + LIMIT
 export const generateUsersByRole = async (
     schoolId: number,
-    //schoolName: string,
+    schoolName: string,
     role: 'student' | 'teacher' | 'parent',
     limit: number,
     conn: PoolConnection
 ) => {
     const roleCode = ROLE_CODE[role];
 
+    /*
     const [[row]] = await conn.query<ScholNameRow[]>(
         "SELECT name FROM schools WHERE id = ? LIMIT 1",
         [schoolId]
@@ -89,6 +90,7 @@ export const generateUsersByRole = async (
     }
     const schoolName: string = row.name
 
+    */
     const initials = getSchoolInitials(schoolName);
 
     // Find how many already exist

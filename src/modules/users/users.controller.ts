@@ -4,32 +4,16 @@ import { BadRequestError } from '../../utils/errors.js';
 
 export const expandUsersAfterPayment = async (
     request: FastifyRequest<{
-        Body: {
-            schoolId: number;
-            studentLimit: number;
-            teacherLimit: number;
-            parentLimit: number;
-        };
+        Params: { schoolId: number };
     }>,
     reply: FastifyReply
 ) => {
 
-    const body = request.body as any;
-    const {
-        schoolId,
-        studentLimit,
-        teacherLimit,
-        parentLimit
-    } = request.body;
-
-    await expandUsersAfterPaymentService(schoolId, {
-        student: studentLimit,
-        teacher: teacherLimit,
-        parent: parentLimit
-    });
+    const { schoolId } = request.params;
+    await expandUsersAfterPaymentService(schoolId);
 
     return reply.send({
         success: true,
-        message: 'Users expanded successfully'
+        message: 'Users expanded based on subscription plan successfully'
     });
 };

@@ -47,46 +47,63 @@ export const applyFreeTier = async (
 //Exapnd Users 
 export const expandUsersAfterPaymentService = async (
     schoolId: number,
-    /*schoolName: string,*/
-    limits: {
-        student: number;
-        teacher: number;
-        parent: number;
-    }
 ) => {
-    if (!schoolId) {
-        throw new BadRequestError('Invalid school data');
-    }
-
-    if (
-        limits.student < 0 ||
-        limits.teacher < 0 ||
-        limits.parent < 0
-    ) {
-        throw new BadRequestError('Invalid subscription limits');
-    }
 
     const conn: PoolConnection = await db.getConnection();
     await conn.beginTransaction();
 
+    //GET active subscription
+    const [subs]: any = await conn.query(
+        `
+    SELECT sp.student_limit, sp.teacher_limit, sp.parent_limit
+    FROM school_subscriptions ss
+    JOIN subscription_plans sp ON ss.plan_id = sp.id
+    WHERE ss.school_id = ? AND ss.status = 'active'
+    LIMIT 1
+    `,
+        [schoolId]
+    );
+
+    if (!subs.length) {
+        throw new BadRequestError('No active subscription found');
+    }
+
+    const { student_limit, teacher_limit, parent_limit } = subs[0];
+
+    //Get SCHOOL NAME
+    const [schools]: any = await conn.query(
+        `SELECT name FROM schools WHERE id = ?`,
+        [schoolId]
+    );
+
+    if (!schools.length) {
+        throw new BadRequestError('School not found');
+    }
+
+    const schoolName = schools[0].name;
+
+
     await generateUsersByRole(
         schoolId,
+        schoolName,
         'student',
-        limits.student,
+        student_limit,
         conn
     );
 
     await generateUsersByRole(
         schoolId,
+        schoolName,
         'teacher',
-        limits.teacher,
+        teacher_limit,
         conn
     );
 
     await generateUsersByRole(
         schoolId,
+        schoolName,
         'parent',
-        limits.parent,
+        parent_limit,
         conn
     );
 
