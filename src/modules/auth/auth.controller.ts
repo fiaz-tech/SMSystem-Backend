@@ -1,46 +1,36 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
-import db from '../../config/db.config.js';
-import type { RowDataPacket } from 'mysql2';
-import { NotFoundError, BadRequestError } from '../../utils/errors.js';
-
-interface UserRow extends RowDataPacket {
-    username: string;
-}
-
-export const loginUser = async (
-    request: FastifyRequest,
-    reply: FastifyReply) => {
-    const { username, password } = request.body as { username: string; password: string };
-
-    const [user] = await db.query<UserRow[]>(
-        'SELECT * FROM users WHERE username = ?',
-        [username]);
-
-    if (!user[0]) {
-        throw new NotFoundError('Invalid username or password');
-    }
-
-    const userData = user[0];
-
-    // Check the password
-    const isPasswordValid = await bcrypt.compare(password, userData.password_hash);
+import { loginService } from './auth.service.js';
+import { updatePasswordService } from './auth.service.js';
 
 
-    if (!isPasswordValid) {
-        throw new NotFoundError('Invalid username or password');
-    }
+export const login = async (
+    request: FastifyRequest<{
+        Body: { username: string; password: string };
+    }>,
+    reply: FastifyReply
+) => {
+    const { username, password } = request.body;
 
-    // Generate JWT token
-    const token = jwt.sign({ id: userData.id, role: userData.role }, process.env.JWT_SECRET as string, { expiresIn: '1h' });
+    const data = await loginService(username, password);
 
-    return reply.send({ token });
-
-    return reply.status(201).send({
+    return reply.send({
         success: true,
-        message: 'User logged in successfully',
+        ...data
     });
 };
 
+
+// Change Password from default
+export const changePassword = async (
+    request: FastifyRequest<{ Body: { password: string } }>,
+    reply: FastifyReply
+) => {
+
+    await updatePasswordService(request.user.id, request.body.password);
+
+    return reply.send({
+        success: true,
+        message: 'Password updated successfully'
+    });
+};
 

@@ -1,6 +1,75 @@
 import db from '../../config/db.config.js';
-import { BadRequestError } from '../../utils/errors.js';
+import { hashPassword } from '../../utils/password.js';
+import { BadRequestError, ForbiddenError } from '../../utils/errors.js';
+import { comparePassword } from '../../utils/password.js';
+import { signToken } from '../../utils/jwt.js';
 
+
+export const loginService = async (
+    username: string,
+    password: string
+) => {
+    const [users]: any = await db.query(
+        `SELECT * FROM users WHERE username = ? AND status = 'active' LIMIT 1`,
+        [username]
+    );
+
+    if (!users.length) {
+        throw new BadRequestError('Invalid credentials');
+    }
+
+
+    const user = users[0];
+
+    const isValid = await comparePassword(password, user.password);
+    if (!isValid) {
+        throw new BadRequestError('Invalid credentials');
+    }
+
+    const token = signToken({
+        id: user.id,
+        role: user.role,
+        schoolId: user.school_id,
+        mustChangePassword: user.must_change_password
+    });
+
+    if (user.must_change_password == true) {
+        return { mustChangePassword: "HEY USER you need to change your password" }
+    }
+
+    return {
+        token,
+        mustChangePassword: user.must_change_password,
+        user: {
+            id: user.id,
+            role: user.role,
+            schoolId: user.school_id
+        }
+    };
+};
+
+
+//Update password
+export const updatePasswordService = async (
+    userId: number,
+    newPassword: string
+) => {
+    if (newPassword.length < 8) {
+        throw new ForbiddenError('Password too short');
+    }
+
+    const hashedPassword = await hashPassword(newPassword);
+
+    await db.query(
+        `
+    UPDATE users
+    SET password = ?, must_change_password = false,
+    password_changed_at = NOW()
+    WHERE id = ?
+    `,
+        [hashedPassword, userId]
+    );
+};
 
 
 export const validateUserLoginLimit = async (

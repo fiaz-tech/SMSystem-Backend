@@ -1,5 +1,6 @@
 import type { PoolConnection } from 'mysql2/promise';
 import db from '../../config/db.config.js';
+import type { RowDataPacket } from "mysql2";
 import {
     ROLE_CODE,
     generateUsername,
@@ -9,8 +10,9 @@ import {
     generateUsersByRole,
 
 } from './users.utils.js';
-import { BadRequestError, NotFoundError } from '../../utils/errors.js';
-
+import { BadRequestError, NotFoundError, ForbiddenError } from '../../utils/errors.js';
+import { hashPassword } from '../../utils/password.js';
+import { generateDefaultPassword } from '../../utils/username.js';
 
 
 //CREATE SCHOOL ADMIN 
@@ -112,6 +114,64 @@ export const expandUsersAfterPaymentService = async (
 
     return true;
 };
+
+
+
+//Resett Users password to default
+export const resetUserPasswordService = async (
+    adminSchoolId: number,
+    targetUserId: number
+) => {
+    const [rows] = await db.query<RowDataPacket[]>(
+        `
+    SELECT id, role, school_id, username
+    FROM users
+    WHERE id = ?
+    `,
+        [targetUserId]
+    );
+
+    const user = rows[0];
+    if (!user) throw new NotFoundError('User not found');
+
+    if (user.school_id !== adminSchoolId) {
+        throw new ForbiddenError('Cannot reset user outside your school');
+    }
+
+    const defaultPassword = generateDefaultPassword(user.username);
+    const hashedPassword = await hashPassword(defaultPassword);
+
+    await db.query(
+        `
+    UPDATE users
+    SET
+      password = ?,
+      must_change_password = true
+    WHERE id = ?
+    `,
+        [hashedPassword, user.id]
+    );
+
+    return {
+        username: user.username,
+        defaultPassword
+    };
+};
+
+
+//GET SCHOOL USERS BY SCHOOL ADMIN
+export const getSchoolUsersBySchoolAdminService = async (schoolId: number) => {
+    const [rows] = await db.query<RowDataPacket[]>(
+        'SELECT * FROM users WHERE school_id = ?',
+        [schoolId]
+    );
+    if (!rows.length) {
+        throw new NotFoundError('School users not found');
+    }
+    return rows;
+};
+
+
 
 
 

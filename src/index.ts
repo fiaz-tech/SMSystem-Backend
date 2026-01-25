@@ -7,10 +7,13 @@ import { errorHandler } from './plugins/error-handler.js';
 import { schoolRoutes } from './modules/schools/schools.router.js';
 import { userRoutes } from './modules/users/users.router.js';
 import { subscriptionRoutes } from './modules/subscriptions/subs.router.js';
+import { authRoutes } from './modules/auth/auth.router.js'
 import { AppError } from './utils/errors.js';
+import { request } from 'node:http';
 
 
 const app = Fastify({ logger: true });
+
 
 app.addHook(
     'onError',
@@ -48,6 +51,7 @@ app.setErrorHandler((error, request, reply) => {
 app.register(schoolRoutes);
 app.register(userRoutes);
 app.register(subscriptionRoutes);
+app.register(authRoutes);
 
 dotenv.config();
 await errorHandler(app);

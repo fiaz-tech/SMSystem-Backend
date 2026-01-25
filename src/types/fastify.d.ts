@@ -3,9 +3,11 @@ import "fastify";
 declare module "fastify" {
     interface FastifyRequest {
         user: {
-            user_id: string;
-            school_id: string;
+            id: number;
             role: string;
+            schoolId: number;
+            role: string;
+            mustChangePassword: boolean;
         };
     }
 }

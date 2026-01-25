@@ -1,8 +1,16 @@
 import type { FastifyInstance } from 'fastify';
-import { loginUser } from './auth.controller.js';
+import { login, changePassword } from './auth.controller.js';
+import { authenticate } from '../../middlewares/authenticate.js';
 
-const authRoutes = async (fastify: FastifyInstance) => {
-    fastify.post('/api/auth/login', loginUser);
+
+export const authRoutes = async (fastify: FastifyInstance) => {
+    fastify.post('/login', login);
+
+    fastify.post<{ Body: { password: string } }>(
+        '/auth/change-pasword',
+        { preHandler: [authenticate] },
+        changePassword
+    )
 };
 
-export default authRoutes;
+
