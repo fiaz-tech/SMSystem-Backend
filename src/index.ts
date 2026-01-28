@@ -9,6 +9,8 @@ import { userRoutes } from './modules/users/users.router.js';
 import { subscriptionRoutes } from './modules/subscriptions/subs.router.js';
 import { authRoutes } from './modules/auth/auth.router.js'
 import { AppError } from './utils/errors.js';
+import { subjectRoutes } from './modules/subjects/subjects.router.js';
+import { teacherSubjectRoutes } from './modules/teacher-subjects/teacherSubject.router.js';
 import { request } from 'node:http';
 
 
@@ -52,6 +54,9 @@ app.register(schoolRoutes);
 app.register(userRoutes);
 app.register(subscriptionRoutes);
 app.register(authRoutes);
+app.register(subjectRoutes);
+app.register(teacherSubjectRoutes);
+
 
 dotenv.config();
 await errorHandler(app);

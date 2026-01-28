@@ -33,9 +33,11 @@ export const loginService = async (
         mustChangePassword: user.must_change_password
     });
 
+    /*
     if (user.must_change_password == true) {
         return { mustChangePassword: "HEY USER you need to change your password" }
     }
+    */
 
     return {
         token,
