@@ -42,8 +42,6 @@ export const subjectRoutes = async (fastify: FastifyInstance) => {
     );
 
 
-
-
 };
 
 
