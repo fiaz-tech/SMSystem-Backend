@@ -27,7 +27,6 @@ export const createSchool = async (
 
     const result = await createSchoolWithDefaults(body);
 
-
     return reply.status(201).send({
         success: true,
         message: 'School created successfully',

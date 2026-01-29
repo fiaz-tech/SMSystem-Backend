@@ -62,7 +62,7 @@ export const getSubjectsByTeacherService = async (
     teacherId: number,
     schoolId: number
 ) => {
-    const [rows] = await db.query(
+    const [rows] = await db.query<RowDataPacket[]>(
         `
     SELECT s.*
     FROM teacher_subjects ts
@@ -73,8 +73,8 @@ export const getSubjectsByTeacherService = async (
         [teacherId, schoolId]
     );
 
-    if (!rows) {
-        throw new NotFoundError("Could not retrieve subjects assigned subjects to teacher")
+    if (!rows.length) {
+        throw new NotFoundError("Could not retrieve subjects assigned to teacher")
     }
 
     return rows;
@@ -86,9 +86,9 @@ export const getTeachersBySubjectService = async (
     subjectId: number,
     schoolId: number
 ) => {
-    const [rows] = await db.query(
+    const [rows] = await db.query<RowDataPacket[]>(
         `
-    SELECT u.id, u.username
+    SELECT u.id, u.username, u.first_name
     FROM teacher_subjects ts
     JOIN users u ON u.id = ts.teacher_id
     WHERE ts.subject_id = ?
@@ -97,7 +97,7 @@ export const getTeachersBySubjectService = async (
         [subjectId, schoolId]
     );
 
-    if (!rows) {
+    if (!rows.length) {
         throw new NotFoundError("Could not retrieve Teachers assigned to the subject")
     }
 

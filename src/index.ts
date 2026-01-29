@@ -11,8 +11,7 @@ import { authRoutes } from './modules/auth/auth.router.js'
 import { AppError } from './utils/errors.js';
 import { subjectRoutes } from './modules/subjects/subjects.router.js';
 import { teacherSubjectRoutes } from './modules/teacher-subjects/teacherSubject.router.js';
-import { request } from 'node:http';
-
+import { classRoutes } from './modules/classes/classes.router.js';
 
 const app = Fastify({ logger: true });
 
@@ -56,6 +55,7 @@ app.register(subscriptionRoutes);
 app.register(authRoutes);
 app.register(subjectRoutes);
 app.register(teacherSubjectRoutes);
+app.register(classRoutes);
 
 
 dotenv.config();

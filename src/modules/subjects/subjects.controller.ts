@@ -8,6 +8,7 @@ import {
 
 } from './subjects.service.js';
 
+
 export const createSubject = async (
     request: FastifyRequest,
     reply: FastifyReply
@@ -22,7 +23,11 @@ export const createSubject = async (
         adminId
     });
 
-    reply.status(201).send(subject);
+    return reply.status(201).send({
+        success: true,
+        message: `${name} Subject created successfully`,
+        data: subject
+    });
 };
 
 //GET SCHOOL Subjects
