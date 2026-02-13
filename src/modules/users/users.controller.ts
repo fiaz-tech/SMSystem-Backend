@@ -4,7 +4,6 @@ import {
     getSchoolUsersBySchoolAdminService,
     resetUserPasswordService
 } from './users.service.js';
-import { BadRequestError } from '../../utils/errors.js';
 
 export const expandUsersAfterPayment = async (
     request: FastifyRequest<{

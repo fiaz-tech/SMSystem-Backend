@@ -14,14 +14,14 @@ export const assignTeacherToSubjectService = async ({
         `SELECT id FROM subjects WHERE id = ? AND school_id = ?`,
         [subjectId, schoolId]
     );
-    if (!subject.length) throw new NotFoundError('Subject not found');
+    if (!subject.length) throw new NotFoundError('Subject does not belong to School - Subject not found');
 
     // Ensure user is a teacher
     const [teacher] = await db.query<RowDataPacket[]>(
         `SELECT id FROM users WHERE id = ? AND role = 'teacher' AND school_id = ?`,
         [teacherId, schoolId]
     );
-    if (!teacher.length) throw new NotFoundError('Teacher not does not belong to school - Teacher not found');
+    if (!teacher.length) throw new NotFoundError('Teacher does not belong to school - Teacher not found');
 
     // Assign
     await db.query(
