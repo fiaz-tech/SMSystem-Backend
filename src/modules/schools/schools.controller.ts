@@ -8,6 +8,8 @@ import {
     deleteSchoolBySlugService
 } from './schools.service.js';
 import { BadRequestError } from '../../utils/errors.js';
+import { registerSchoolSchema } from './schools.schema.js';
+import type { RegisterSchoolBody } from './schools.schema.js';
 interface GetSchoolsQuery {
     page?: string;
     limit?: string;
@@ -19,13 +21,16 @@ export const createSchool = async (
     request: FastifyRequest,
     reply: FastifyReply
 ) => {
-    const body = request.body as any;
+    const body = registerSchoolSchema.safeParse(request.body);
 
-    if (!body.name || !body.address || !body.phone || !body.email || !body.logo_url) {
-        throw new BadRequestError('Required fields are missing');
-    };
+    if (!body.success) {
+        throw new BadRequestError("Validation error");
+    }
 
-    const result = await createSchoolWithDefaults(body);
+    const schoolData: RegisterSchoolBody = body.data;
+    const { name, address, email, phone, logo_url } = schoolData;
+
+    const result = await createSchoolWithDefaults(schoolData);
 
     return reply.status(201).send({
         success: true,

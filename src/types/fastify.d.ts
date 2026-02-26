@@ -1,13 +1,8 @@
 import "fastify";
+import { AuthTokenPayload } from "../utils/jwt.ts";
 
 declare module "fastify" {
     interface FastifyRequest {
-        user: {
-            id: number;
-            role: string;
-            schoolId: number;
-            role: string;
-            mustChangePassword: boolean;
-        };
+        user: AuthTokenPayload;
     }
 }

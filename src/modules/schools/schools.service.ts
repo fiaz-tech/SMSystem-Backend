@@ -5,7 +5,7 @@ import { BadRequestError, NotFoundError } from "../../utils/errors.js";
 import type { School } from "./schools.types.js";
 import { createSchoolAdminUser, applyFreeTier } from "../users/users.service.js";
 import { createFreeTierSchoolSubscription } from "../subscriptions/subs.service.js";
-
+import { generateUniqueSchoolCode } from "../../utils/schoolCode.js";
 
 interface CountRow extends RowDataPacket {
     total: number;
@@ -36,20 +36,22 @@ export const createSchoolWithDefaults = async (data: any) => {
         throw new BadRequestError('A school with this name already exists');
     }
 
+    const schoolCode = await generateUniqueSchoolCode(name, connection);
+
     // Create School
     const [schoolResult]: any = await connection.query(
-        `INSERT INTO schools ( name, address, slug, email, phone, logo_url)
-      VALUES (?, ?, ?, ?, ?, ?)`,
-        [name, address, slug, email, phone, logo_url]
+        `INSERT INTO schools ( name, address, slug, email, phone, logo_url, school_code)
+      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [name, address, slug, email, phone, logo_url, schoolCode]
     );
 
     const schoolId = schoolResult.insertId
 
     // Create admin user
-    await createSchoolAdminUser(schoolId, data.name, connection);
+    await createSchoolAdminUser(schoolId, schoolCode, connection);
 
     // Apply free tier
-    await applyFreeTier(schoolId, data.name, connection);
+    await applyFreeTier(schoolId, schoolCode, connection);
 
     //Let Data Reflect in school_subscriptions TABLE
     await createFreeTierSchoolSubscription(schoolId, connection);
@@ -108,9 +110,6 @@ export const getAllSchoolsService = async (
     );
 
     const [{ total } = { total: 0 }] = countRows;
-
-    //const total = countRows.length ? countRows[0].total : 0;
-    //const total = countRows[0].total as number;
 
 
     return {

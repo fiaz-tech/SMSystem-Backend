@@ -4,7 +4,6 @@ import type { RowDataPacket } from "mysql2";
 import {
     ROLE_CODE,
     generateUsername,
-    getSchoolInitials,
     hashDefaultPassword,
     generateDefaultUsersByRole,
     generateUsersByRole,
@@ -18,11 +17,11 @@ import { generateDefaultPassword } from '../../utils/username.js';
 //CREATE SCHOOL ADMIN 
 export const createSchoolAdminUser = async (
     schoolId: number,
-    schoolName: string,
+    schoolCode: string,
     conn: PoolConnection
 ) => {
-    const initials = getSchoolInitials(schoolName);
-    const username = generateUsername(initials, ROLE_CODE.admin, 1);
+    //const initials = getSchoolInitials(schoolName);
+    const username = generateUsername(schoolCode, ROLE_CODE.admin, 1);
     const password = await hashDefaultPassword(username);
 
     await conn.query(
@@ -37,12 +36,12 @@ export const createSchoolAdminUser = async (
 // APPLY FREE TIER
 export const applyFreeTier = async (
     schoolId: number,
-    schoolName: string,
+    schoolCode: string,
     conn: PoolConnection
 ) => {
-    await generateDefaultUsersByRole(schoolId, schoolName, 'student', 20, conn);
-    await generateDefaultUsersByRole(schoolId, schoolName, 'teacher', 5, conn);
-    await generateDefaultUsersByRole(schoolId, schoolName, 'parent', 20, conn);
+    await generateDefaultUsersByRole(schoolId, schoolCode, 'student', 20, conn);
+    await generateDefaultUsersByRole(schoolId, schoolCode, 'teacher', 5, conn);
+    await generateDefaultUsersByRole(schoolId, schoolCode, 'parent', 20, conn);
 };
 
 
@@ -82,12 +81,12 @@ export const expandUsersAfterPaymentService = async (
         throw new BadRequestError('School not found');
     }
 
-    const schoolName = schools[0].name;
+    const schoolCode = schools[0].school_code;
 
 
     await generateUsersByRole(
         schoolId,
-        schoolName,
+        schoolCode,
         'student',
         student_limit,
         conn
@@ -95,7 +94,7 @@ export const expandUsersAfterPaymentService = async (
 
     await generateUsersByRole(
         schoolId,
-        schoolName,
+        schoolCode,
         'teacher',
         teacher_limit,
         conn
@@ -103,7 +102,7 @@ export const expandUsersAfterPaymentService = async (
 
     await generateUsersByRole(
         schoolId,
-        schoolName,
+        schoolCode,
         'parent',
         parent_limit,
         conn

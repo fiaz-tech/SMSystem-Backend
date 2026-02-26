@@ -3,6 +3,7 @@ import { hashPassword } from '../../utils/password.js';
 import { BadRequestError, ForbiddenError } from '../../utils/errors.js';
 import { comparePassword } from '../../utils/password.js';
 import { signToken } from '../../utils/jwt.js';
+import { generateRefreshToken, hashToken } from '../../utils/refreshToken.js';
 
 
 export const loginService = async (
@@ -26,12 +27,26 @@ export const loginService = async (
         throw new BadRequestError('Invalid credentials');
     }
 
-    const token = signToken({
+    //Generate Access Token( short-lived)
+    const accessToken = signToken({
         id: user.id,
         role: user.role,
         schoolId: user.school_id,
         mustChangePassword: user.must_change_password
     });
+
+    //Generate Refresh Token(7 -Days here)
+    const refreshToken = generateRefreshToken();
+    const hashedRefreshToken = hashToken(refreshToken);
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    //Store hashed Token to DB
+    await db.query(
+        `INSERT INTO refresh_tokens (user_id, token_hash, expires_at)
+     VALUES (?, ?, ?)`,
+        [user.id, hashedRefreshToken, expiresAt]
+    );
 
     /*
     if (user.must_change_password == true) {
@@ -40,7 +55,8 @@ export const loginService = async (
     */
 
     return {
-        token,
+        accessToken,
+        refreshToken,
         mustChangePassword: user.must_change_password,
         user: {
             id: user.id,
@@ -121,3 +137,70 @@ export const validateUserLoginLimit = async (
 
     return true;
 };
+
+
+
+export const refreshTokenService = async (refreshToken: string) => {
+    const hashedToken = hashToken(refreshToken);
+
+    const [rows]: any = await db.query(
+        `SELECT * FROM refresh_tokens 
+     WHERE token_hash = ? 
+     AND revoked = FALSE 
+     AND expires_at > NOW()
+     LIMIT 1`,
+        [hashedToken]
+    );
+
+    if (!rows.length) {
+        throw new Error('Invalid refresh token');
+    }
+
+    const storedToken = rows[0];
+
+    //
+    //Delete old token (rotation)
+    //
+    await db.query(
+        `DELETE FROM refresh_tokens WHERE id = ?`,
+        [storedToken.id]
+    );
+
+    //
+    //Fetch user
+    //
+    const [users]: any = await db.query(
+        `SELECT * FROM users WHERE id = ? LIMIT 1`,
+        [storedToken.user_id]
+    );
+
+    const user = users[0];
+
+    //
+    // Issue new tokens
+    //
+    const newAccessToken = signToken({
+        id: user.id,
+        role: user.role,
+        schoolId: user.school_id,
+        mustChangePassword: user.must_change_password,
+    });
+
+    const newRefreshToken = generateRefreshToken();
+    const newHashedToken = hashToken(newRefreshToken);
+
+    const newExpiresAt = new Date();
+    newExpiresAt.setDate(newExpiresAt.getDate() + 7);
+
+    await db.query(
+        `INSERT INTO refresh_tokens (user_id, token_hash, expires_at)
+     VALUES (?, ?, ?)`,
+        [user.id, newHashedToken, newExpiresAt]
+    );
+
+    return {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+    };
+};
+

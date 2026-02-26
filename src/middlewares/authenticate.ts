@@ -8,7 +8,7 @@ export const authenticate = async (
 ) => {
     const authHeader = request.headers.authorization;
 
-    if (!authHeader) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
         throw new UnauthorizedError('Authentication required');
     }
 
@@ -21,7 +21,7 @@ export const authenticate = async (
 
     request.user = decoded as {
         id: number;
-        role: string;
+        role: 'admin' | 'teacher' | 'student' | 'parent';
         schoolId: number;
         mustChangePassword: boolean;
     };
@@ -29,6 +29,18 @@ export const authenticate = async (
 
 export const schoolAdminOnly = async (request: FastifyRequest) => {
     if (request.user.role !== 'admin') {
+        throw new ForbiddenError('School admin access only');
+    }
+};
+
+export const schoolStudentOnly = async (request: FastifyRequest) => {
+    if (request.user.role !== 'student') {
+        throw new ForbiddenError('School student access only');
+    }
+};
+
+export const schoolTeacherOnly = async (request: FastifyRequest) => {
+    if (request.user.role !== 'teacher') {
         throw new ForbiddenError('School admin access only');
     }
 };

@@ -7,6 +7,7 @@ import {
 
 } from "./studentClasses.service.js";
 import { BadRequestError } from "../../utils/errors.js";
+import { autoAssignSubjectsToStudent } from "../student_subjects/studentSubjects.service.js";
 
 // assign subjects to Class controller
 export const assignStudentToClass = async (
@@ -15,14 +16,20 @@ export const assignStudentToClass = async (
 ) => {
 
     const { schoolId } = request.user;
-    const { studentUsername } = request.body as any;
+    const { studentId } = request.body as any;
     const { classId } = request.params as any;
 
     const result = await assignStudentToClassService(
         schoolId,
         classId,
-        studentUsername,
+        studentId,
     );
+
+    await autoAssignSubjectsToStudent(
+        schoolId,
+        studentId,
+        classId
+    )
 
     return reply.status(201).send({
         success: true,

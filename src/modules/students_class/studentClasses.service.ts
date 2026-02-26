@@ -1,6 +1,7 @@
 import db from "../../config/db.config.js";
 import type { RowDataPacket } from "mysql2";
 import { ForbiddenError, NotFoundError } from "../../utils/errors.js";
+import { autoAssignSubjectsToStudent } from "../student_subjects/studentSubjects.service.js";
 import { isSchoolClass, isSchoolStudent } from "./studentClasses.authorization.js";
 
 
@@ -9,16 +10,8 @@ import { isSchoolClass, isSchoolStudent } from "./studentClasses.authorization.j
 export const assignStudentToClassService = async (
     schoolId: number,
     classId: number,
-    studentUsername: String
+    studentId: number
 ) => {
-    const [[student]] = await db.query<RowDataPacket[]>(
-        `SELECT id FROM users where username = ?`, [studentUsername]
-    );
-    if (!student) { throw new NotFoundError("student not found") };
-
-    const studentId = student.id;
-
-    console.log(student.id);
 
     //Ensure Class belongs to School
     const [schoolClass] = await db.query<RowDataPacket[]>(
@@ -46,13 +39,10 @@ export const assignStudentToClassService = async (
         [schoolId]
     );
 
-    console.log(count);
-
 
     if (!count) {
         throw new NotFoundError("No data found");
     }
-
 
     //Check School Subscription
     const [[limit]] = await db.query<RowDataPacket[]>(
@@ -65,7 +55,6 @@ export const assignStudentToClassService = async (
         [schoolId]
     );
 
-    console.log(limit);
 
     if (!limit) {
         throw new NotFoundError("This is beyond limit")
